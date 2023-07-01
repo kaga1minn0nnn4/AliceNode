@@ -34,7 +34,27 @@ void yolo_result_callback(const std_msgs::String::ConstPtr& result_msg) {
 }
 
 void movebase_status_callback(const actionlib_msgs::GoalStatusArray::ConstPtr& status) {
-    navigation_is_finished = true;
+    uint8_t status_id = 0;
+    if (!status->status_list.empty()) {
+        actionlib_msgs::GoalStatus goal_status = status->status_list[0];
+        status_id = goal_status.status;
+    }
+
+    switch (status_id) {
+      case 1: {
+        navigation_is_finished = false;
+        break;
+      }
+      // case 0:
+      case 3: {
+        navigation_is_finished = true;
+        break;
+      }
+      default:
+        break;
+    }
+
+    std::printf("id: %d\n", status_id);
 }
 
 int main(int argc, char** argv) {
