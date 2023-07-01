@@ -29,6 +29,9 @@ enum class RobotStatus {
 
 bool searching_is_finished = false;
 bool navigation_is_finished = true;
+bool mapdata_is_read = false;
+
+cv::Mat mapimage;
 
 void joystick_callback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
 
@@ -100,11 +103,12 @@ void mapdata_callback(const nav_msgs::OccupancyGrid::ConstPtr& mapdata) {
     }
 
     cv::Mat img(2048, 2048, CV_8UC1, img_rawdata);
-    cv::Mat cliped_mapimg;
 
-    clip_mapdata(img, cliped_mapimg);
+    clip_mapdata(img, mapimage);
 
-    cv::imwrite("/home/tenshi/catkin_ws/src/aris_maincore/map_clip.png", cliped_mapimg);
+    // cv::imwrite("/home/tenshi/catkin_ws/src/aris_maincore/map_clip.png", cliped_mapimg);
+
+    mapdata_is_read = true;
 }
 
 int main(int argc, char** argv) {
@@ -126,9 +130,11 @@ int main(int argc, char** argv) {
     while (ros::ok()) {
         switch (rstate) {
           case RobotStatus::kStart: {
-            searching_is_finished = false;
-            navigation_is_finished = false;
-            rstate = RobotStatus::kMoveToPoint;
+            if (mapdata_is_read) {
+                searching_is_finished = false;
+                navigation_is_finished = false;
+                rstate = RobotStatus::kMoveToPoint;
+            }
             break;
           }
           case RobotStatus::kMoveToPoint: {
