@@ -27,9 +27,36 @@ enum class RobotStatus {
     kEndSearch
 };
 
+static constexpr uint16_t lattice_n = 4;
+static constexpr uint16_t lattice_m = 3;
+
 bool searching_is_finished = false;
 bool navigation_is_finished = true;
 bool mapdata_is_read = false;
+
+std::vector<cv::Point> calcu_lattice_point(cv::Mat& image) {
+    uint16_t w = image.size().width;
+    uint16_t h = image.size().height;
+
+    std::vector<cv::Point> lattice_points;
+
+    cv::Mat3b img_temp = image;
+
+    for (int i = 0; i < (lattice_n - 1); i++) {
+        for (int j = 0; j < (lattice_m - 1); j++) {
+            cv::Point p;
+            p.x = static_cast<int>(static_cast<double>(w) / static_cast<double>(lattice_n) * (i + 1));
+            p.y = static_cast<int>(static_cast<double>(h) / static_cast<double>(lattice_m) * (j + 1));
+
+            if (static_cast<uint16_t>(img_temp(p)[0]) != 255) {
+                lattice_points.push_back(p);
+                ROS_INFO("x: %d, y: %d", p.x, p.y);
+            }
+        }
+    }
+
+    return lattice_points;
+}
 
 cv::Mat mapimage;
 
@@ -130,14 +157,18 @@ int main(int argc, char** argv) {
     while (ros::ok()) {
         switch (rstate) {
           case RobotStatus::kStart: {
+            ROS_INFO("kStart");
             if (mapdata_is_read) {
                 searching_is_finished = false;
                 navigation_is_finished = false;
                 rstate = RobotStatus::kMoveToPoint;
+
+                calcu_lattice_point(mapimage);
             }
             break;
           }
           case RobotStatus::kMoveToPoint: {
+            ROS_INFO("kMoveToPoint");
             if (searching_is_finished){
                 rstate = RobotStatus::kEndSearch;
                 break;
@@ -150,6 +181,7 @@ int main(int argc, char** argv) {
             break;
           }
           case RobotStatus::kRotateInPlace: {
+            ROS_INFO("kRotateInPlace");
             if (searching_is_finished){
                 rstate = RobotStatus::kEndSearch;
                 break;
@@ -162,6 +194,7 @@ int main(int argc, char** argv) {
             break;
           }
           case RobotStatus::kEndSearch: {
+            ROS_INFO("kEndSearch");
             break;
           }
           default: {
