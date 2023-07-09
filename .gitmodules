@@ -1,0 +1,3 @@
+[submodule "src/FangFSM"]
+	path = src/FangFSM
+	url = https://github.com/toida2003/FangFSM.git

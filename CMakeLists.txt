@@ -125,9 +125,6 @@ include_directories(
 include_directories(
   ${OpenCV_INCLUDE_DIRS}
 )
-include_directories(
-  submodule
-)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

@@ -14,6 +14,7 @@
 
 #include "goal_point_2D.hpp"
 #include "map_processing.hpp"
+#include "FangFSM/fsm.hpp"
 
 enum class RobotStatus {
     kStart,
@@ -77,6 +78,6 @@ namespace AliceLib {
         void ClipMapdata(const cv::Mat& mapimg, cv::Mat& cliped_mapimg);
 
         void Run(const ros::TimerEvent& e);
-        
+
     };
 }

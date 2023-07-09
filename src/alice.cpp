@@ -91,7 +91,7 @@ namespace AliceLib {
             }
         }
 
-        std::printf("id: %d\n", status_id);
+        // std::printf("id: %d\n", status_id);
     }
 
     void Alice::ClipMapdata(const cv::Mat& mapimg, cv::Mat& cliped_mapimg) {
