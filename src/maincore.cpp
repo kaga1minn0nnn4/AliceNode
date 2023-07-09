@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <vector>
+#include <queue>
 
 #include <opencv2/opencv.hpp>
 
@@ -29,10 +30,50 @@ enum class RobotStatus {
 
 static constexpr uint16_t lattice_n = 4;
 static constexpr uint16_t lattice_m = 3;
+static constexpr double distance_per_cells = 0.05;
 
 bool searching_is_finished = false;
 bool navigation_is_finished = true;
 bool mapdata_is_read = false;
+
+std::vector<cv::Point> target_points;
+cv::Mat mapimage;
+
+class GoalPoint2D {
+ public:
+    GoalPoint2D(double x, double y, double angle);
+
+    operator geometry_msgs::PoseStamped();
+
+    void Show() const;
+
+ private:
+    geometry_msgs::PoseStamped goal_point_;
+
+};
+
+std::queue<GoalPoint2D> goal_points;
+
+GoalPoint2D::GoalPoint2D(double x, double y, double angle) {
+    goal_point_.pose.position.x = x;
+    goal_point_.pose.position.y = y;
+    goal_point_.pose.position.z = 0.0;
+    goal_point_.pose.orientation.w = angle;
+
+    goal_point_.header.stamp = ros::Time::now();
+    goal_point_.header.frame_id = "map";
+}
+
+GoalPoint2D::operator geometry_msgs::PoseStamped() {
+    return goal_point_;
+}
+
+void GoalPoint2D::Show() const {
+    std::printf("x: %5.2f, y: %5.2f, angle: %5.2f\n",
+        goal_point_.pose.position.x,
+        goal_point_.pose.position.y,
+        goal_point_.pose.orientation.w);
+}
 
 std::vector<cv::Point> calcu_lattice_point(cv::Mat& image) {
     uint16_t w = image.size().width;
@@ -50,7 +91,7 @@ std::vector<cv::Point> calcu_lattice_point(cv::Mat& image) {
 
             if (static_cast<uint16_t>(img_temp(p)[0]) != 255) {
                 lattice_points.push_back(p);
-                ROS_INFO("x: %d, y: %d", p.x, p.y);
+                ROS_INFO("x: %d, y: %d", lattice_points.back().x, lattice_points.back().y);
             }
         }
     }
@@ -58,7 +99,21 @@ std::vector<cv::Point> calcu_lattice_point(cv::Mat& image) {
     return lattice_points;
 }
 
-cv::Mat mapimage;
+std::queue<GoalPoint2D> convert_coordinate(const std::vector<cv::Point> points) {
+    std::queue<GoalPoint2D> converted_points;
+
+    std::printf("%d, %d\n", points[3].x, points[3].y);
+
+    for (int i = 0; i < points.size(); i++) {
+        double x = static_cast<double>(points[i].x) * distance_per_cells;
+        double y = static_cast<double>(points[i].y) * distance_per_cells;
+        converted_points.push(GoalPoint2D(1.0, 1.0, 1.0));
+
+        converted_points.back().Show();
+    }
+
+    return converted_points;
+}
 
 void joystick_callback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
 
@@ -131,9 +186,13 @@ void mapdata_callback(const nav_msgs::OccupancyGrid::ConstPtr& mapdata) {
 
     cv::Mat img(2048, 2048, CV_8UC1, img_rawdata);
 
-    clip_mapdata(img, mapimage);
+    cv::Mat dst;
+    cv::flip(img, dst, 0);
 
-    // cv::imwrite("/home/tenshi/catkin_ws/src/aris_maincore/map_clip.png", cliped_mapimg);
+    clip_mapdata(dst, mapimage);
+
+    cv::imwrite("/home/tenshi/catkin_ws/src/aris_maincore/map/map.png", img);
+    cv::imwrite("/home/tenshi/catkin_ws/src/aris_maincore/map/map_clip.png", mapimage);
 
     mapdata_is_read = true;
 }
@@ -143,12 +202,12 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh("~");
 
     ros::Publisher rover_pub = nh.advertise<geometry_msgs::Twist>("/rover_twist", 10);
-    ros::Publisher goal_pub = nh.advertise<geometry_msgs::PoseStamped>("move_base_simple/goal", 1);
+    ros::Publisher goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
 
     ros::Subscriber joystick_sub = nh.subscribe("/joy", 10, joystick_callback);
     ros::Subscriber yolo_result_sub = nh.subscribe("/result", 10, yolo_result_callback);
     ros::Subscriber movebase_status_sub = nh.subscribe("/move_base/status", 10, movebase_status_callback);
-    ros::Subscriber mapdata_sub = nh.subscribe("/map", 10, mapdata_callback);
+    ros::Subscriber mapdata_sub = nh.subscribe("/premaked_map", 10, mapdata_callback);
 
     ros::Rate r(10);
 
@@ -163,7 +222,9 @@ int main(int argc, char** argv) {
                 navigation_is_finished = false;
                 rstate = RobotStatus::kMoveToPoint;
 
-                calcu_lattice_point(mapimage);
+                target_points = calcu_lattice_point(mapimage);
+
+                goal_points = convert_coordinate(target_points);
             }
             break;
           }
@@ -174,9 +235,16 @@ int main(int argc, char** argv) {
                 break;
             }
             if (navigation_is_finished) {
+                goal_points.pop();
                 rstate = RobotStatus::kRotateInPlace;
             } else {
-                // goal_pub.Publish(...)
+                if (!goal_points.empty()) {
+                    geometry_msgs::PoseStamped p = goal_points.front();
+                    goal_pub.publish(p);
+                    rstate = RobotStatus::kEndSearch;
+                } else {
+                    rstate = RobotStatus::kEndSearch;
+                }
             }
             break;
           }

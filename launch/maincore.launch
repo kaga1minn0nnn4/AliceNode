@@ -1,0 +1,55 @@
+<launch>
+    <!-- Load robot description and start state publisher-->
+    <param name="robot_description" textfile="$(find cartgrapher_navigation)/urdf/robot_model.urdf" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+    <!-- convert_twistmsg -->
+    <node name="convert_twistmsg"   pkg="convert_twistmsg" type="convert_twistmsg" output="screen"/>
+
+    <!-- map_server(pre-maked map publish) -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find aris_maincore)/map/map_target.yaml" >
+        <remap from="map" to="premaked_map"/>
+    </node>
+
+    <!-- rplidar -->
+    <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode">
+        <param name="serial_port"         type="string" value="/dev/ttyUSB0"/>
+        <param name="serial_baudrate"     type="int"    value="1000000"/>
+        <param name="frame_id"            type="string" value="laser"/>
+        <param name="inverted"            type="bool"   value="false"/>
+        <param name="angle_compensate"    type="bool"   value="true"/>
+        <param name="scan_frequency"      type="double"    value="10.0"/>
+    </node>
+
+    <!-- outdoor -->
+    <node name="cartographer_node" pkg="cartographer_ros" type="cartographer_node" args="
+          -configuration_directory
+              $(find cartgrapher_navigation)/configuration_files
+          -configuration_basename outdoor_2d.lua" output="screen">
+    </node>
+
+		<!-- Additional node which converts Cartographer map into ROS occupancy grid map. Not used and can be skipped in this case -->
+    <!--<node name="cartographer_occupancy_grid_node" pkg="cartographer_ros" type="cartographer_occupancy_grid_node" args="-resolution 0.05" />-->
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros" type="cartographer_occupancy_grid_node" args="-resolution 0.15" />
+
+    <!-- move base -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+      <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+      <rosparam file="$(find cartgrapher_navigation)/param/costmap_common_params.yaml" command="load" ns="global_costmap"/>
+      <rosparam file="$(find cartgrapher_navigation)/param/costmap_common_params.yaml" command="load" ns="local_costmap"/>
+      <rosparam file="$(find cartgrapher_navigation)/param/local_costmap_params.yaml" command="load"/>
+      <rosparam file="$(find cartgrapher_navigation)/param/global_costmap_params.yaml" command="load"/>
+      <!--<rosparam file="$(find cartgrapher_navigation)/param/base_local_planner_params.yaml" command="load"/>-->
+      <rosparam file="$(find cartgrapher_navigation)/param/dwa_local_planner_params.yaml" command="load" />
+      <rosparam file="$(find cartgrapher_navigation)/param/move_base_params.yaml" command="load"/>
+    </node>
+
+    <!-- Start RViz with custom view -->
+    <!--node pkg="rviz" type="rviz" name="show_rviz" args="-d $(find cartgrapher_navigation)/rviz/navigation.rviz"/-->
+
+    <!-- wait for move_base starting -->
+    <arg name="maincore_start_delay" default="5.0"/>
+
+    <!-- maincore -->
+    <node name="aris_maincore" pkg="aris_maincore" type="aris_maincore" output="screen" launch-prefix="bash -c 'sleep $(arg maincore_start_delay); $0 $@' "/>
+</launch>
