@@ -1,2 +1,2 @@
-# aris_maincore
-aris_maincore is main program for object search robot.
+# AliceNode
+AliceNode is main node for object search robot.
