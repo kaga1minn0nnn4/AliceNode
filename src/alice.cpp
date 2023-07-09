@@ -2,6 +2,7 @@
 
 namespace AliceLib {
     void Alice::Run(const ros::TimerEvent& e) {
+        std::lock_guard<std::mutex> lock(mtx_);
 
         switch (rstate) {
           case RobotStatus::kStart: {
@@ -48,8 +49,8 @@ namespace AliceLib {
                 // goal_pub.Publish(...)
             }
             break;
-            }
-            case RobotStatus::kEndSearch: {
+          }
+          case RobotStatus::kEndSearch: {
             ROS_INFO("kEndSearch");
             break;
           }
@@ -60,10 +61,10 @@ namespace AliceLib {
     }
 
     void Alice::YOLOv7ResultCallback(const std_msgs::String::ConstPtr& result_msg) {
-
-        //std::lock_guard<std::mutex> lock(m_);
-        searching_is_finished_ = false;
-
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            searching_is_finished_ = false;
+        }
     }
 
     void Alice::MovebaseStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& status) {
@@ -73,22 +74,22 @@ namespace AliceLib {
             status_id = goal_status.status;
         }
 
-
-        //std::lock_guard<std::mutex> lock(m_);
-        switch (status_id) {
-        case 1: {
-            navigation_is_finished_ = false;
-            break;
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            switch (status_id) {
+            case 1: {
+                navigation_is_finished_ = false;
+                break;
+            }
+            // case 0:
+            case 3: {
+                navigation_is_finished_ = true;
+                break;
+            }
+            default:
+                break;
+            }
         }
-        // case 0:
-        case 3: {
-            navigation_is_finished_ = true;
-            break;
-        }
-        default:
-            break;
-        }
-
 
         std::printf("id: %d\n", status_id);
     }
@@ -137,12 +138,12 @@ namespace AliceLib {
 
         cv::imwrite("/home/tenshi/catkin_ws/src/AliceNode/map/map.png", img);
 
-
-        //std::lock_guard<std::mutex> lock(m_);
-        ClipMapdata(dst, mapimage_);
-        cv::imwrite("/home/tenshi/catkin_ws/src/AliceNode/map/map_clip.png", mapimage_);
-        mapdata_is_read_ = true;
-
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            ClipMapdata(dst, mapimage_);
+            cv::imwrite("/home/tenshi/catkin_ws/src/AliceNode/map/map_clip.png", mapimage_);
+            mapdata_is_read_ = true;
+        }
 
     }
 

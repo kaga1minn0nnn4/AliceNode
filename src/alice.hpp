@@ -77,5 +77,6 @@ namespace AliceLib {
         void ClipMapdata(const cv::Mat& mapimg, cv::Mat& cliped_mapimg);
 
         void Run(const ros::TimerEvent& e);
+        
     };
 }
