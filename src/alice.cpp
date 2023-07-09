@@ -1,7 +1,8 @@
 #include "alice.hpp"
 
 namespace AliceLib {
-    void Alice::Run() {
+    void Alice::Run(const ros::TimerEvent& e) {
+
         switch (rstate) {
           case RobotStatus::kStart: {
             ROS_INFO("kStart");
@@ -10,8 +11,8 @@ namespace AliceLib {
                 navigation_is_finished_ = false;
                 rstate = RobotStatus::kMoveToPoint;
 
-                MapProcessingLib::MapProcessing mp(mapimage, kLatticeN, kLatticeM);
-                goal_points = mp.GetGoalPoints();
+                MapProcessingLib::MapProcessing mp(mapimage_, kLatticeN, kLatticeM);
+                goal_points_ = mp.GetGoalPoints();
             }
             break;
           }
@@ -22,11 +23,11 @@ namespace AliceLib {
                 break;
             }
             if (navigation_is_finished_) {
-                goal_points.pop();
+                goal_points_.pop();
                 rstate = RobotStatus::kRotateInPlace;
             } else {
-                if (!goal_points.empty()) {
-                    geometry_msgs::PoseStamped p = goal_points.front();
+                if (!goal_points_.empty()) {
+                    geometry_msgs::PoseStamped p = goal_points_.front();
                     goal_pub_.publish(p);
                     rstate = RobotStatus::kEndSearch;
                 } else {
@@ -59,7 +60,10 @@ namespace AliceLib {
     }
 
     void Alice::YOLOv7ResultCallback(const std_msgs::String::ConstPtr& result_msg) {
+
+        //std::lock_guard<std::mutex> lock(m_);
         searching_is_finished_ = false;
+
     }
 
     void Alice::MovebaseStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& status) {
@@ -69,6 +73,8 @@ namespace AliceLib {
             status_id = goal_status.status;
         }
 
+
+        //std::lock_guard<std::mutex> lock(m_);
         switch (status_id) {
         case 1: {
             navigation_is_finished_ = false;
@@ -82,6 +88,7 @@ namespace AliceLib {
         default:
             break;
         }
+
 
         std::printf("id: %d\n", status_id);
     }
@@ -128,12 +135,15 @@ namespace AliceLib {
         cv::Mat dst;
         cv::flip(img, dst, 0);
 
-        ClipMapdata(dst, mapimage);
-
         cv::imwrite("/home/tenshi/catkin_ws/src/AliceNode/map/map.png", img);
-        cv::imwrite("/home/tenshi/catkin_ws/src/AliceNode/map/map_clip.png", mapimage);
 
+
+        //std::lock_guard<std::mutex> lock(m_);
+        ClipMapdata(dst, mapimage_);
+        cv::imwrite("/home/tenshi/catkin_ws/src/AliceNode/map/map_clip.png", mapimage_);
         mapdata_is_read_ = true;
+
+
     }
 
 }
