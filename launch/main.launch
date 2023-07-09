@@ -196,7 +196,7 @@
     </node-->
 
     <!-- wait for move_base starting -->
-    <arg name="maincore_start_delay" default="5.0"/>
+    <arg name="mainnode_start_delay" default="5.0"/>
 
     <!-- convert_twistmsg -->
     <node name="convert_twistmsg"   pkg="convert_twistmsg" type="convert_twistmsg" output="screen"/>
@@ -207,5 +207,5 @@
     </node>
 
     <!-- maincore -->
-    <node name="aris_maincore" pkg="aris_maincore" type="aris_maincore" output="screen" launch-prefix="bash -c 'sleep $(arg maincore_start_delay); $0 $@' "/>
+    <node name="alicenode" pkg="alicenode" type="alicenode" output="screen" launch-prefix="bash -c 'sleep $(arg mainnode_start_delay); $0 $@' "/>
 </launch>

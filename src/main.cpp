@@ -1,7 +1,7 @@
 /**
- * @file maincore.cpp
+ * @file main.cpp
  * @author daito tatesawa
- * @brief main core
+ * @brief main node
  */
 
 #include <ros/ros.h>
@@ -125,7 +125,7 @@ void mapdata_callback(const nav_msgs::OccupancyGrid::ConstPtr& mapdata) {
 }
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "main_core");
+    ros::init(argc, argv, "mainnode");
     ros::NodeHandle nh("~");
 
     ros::Publisher rover_pub = nh.advertise<geometry_msgs::Twist>("/rover_twist", 10);
