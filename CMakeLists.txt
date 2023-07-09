@@ -125,6 +125,9 @@ include_directories(
 include_directories(
   ${OpenCV_INCLUDE_DIRS}
 )
+include_directories(
+  submodule
+)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -139,7 +142,13 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME} src/main.cpp src/goal_point_2D.cpp src/map_processing.cpp)
+add_executable(
+    ${PROJECT_NAME}
+    src/main.cpp
+    src/goal_point_2D.cpp
+    src/map_processing.cpp
+    src/alice.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
