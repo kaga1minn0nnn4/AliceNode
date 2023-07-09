@@ -21,6 +21,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "goal_point_2D.hpp"
+#include "map_processing.hpp"
+
 enum class RobotStatus {
     kStart,
     kMoveToPoint,
@@ -30,90 +33,14 @@ enum class RobotStatus {
 
 static constexpr uint16_t lattice_n = 4;
 static constexpr uint16_t lattice_m = 3;
-static constexpr double distance_per_cells = 0.05;
 
 bool searching_is_finished = false;
 bool navigation_is_finished = true;
 bool mapdata_is_read = false;
 
-std::vector<cv::Point> target_points;
+std::queue<GoalPoint2DLib::GoalPoint2D> goal_points;
+
 cv::Mat mapimage;
-
-class GoalPoint2D {
- public:
-    GoalPoint2D(double x, double y, double angle);
-
-    operator geometry_msgs::PoseStamped();
-
-    void Show() const;
-
- private:
-    geometry_msgs::PoseStamped goal_point_;
-
-};
-
-std::queue<GoalPoint2D> goal_points;
-
-GoalPoint2D::GoalPoint2D(double x, double y, double angle) {
-    goal_point_.pose.position.x = x;
-    goal_point_.pose.position.y = y;
-    goal_point_.pose.position.z = 0.0;
-    goal_point_.pose.orientation.w = angle;
-
-    goal_point_.header.stamp = ros::Time::now();
-    goal_point_.header.frame_id = "map";
-}
-
-GoalPoint2D::operator geometry_msgs::PoseStamped() {
-    return goal_point_;
-}
-
-void GoalPoint2D::Show() const {
-    std::printf("x: %5.2f, y: %5.2f, angle: %5.2f\n",
-        goal_point_.pose.position.x,
-        goal_point_.pose.position.y,
-        goal_point_.pose.orientation.w);
-}
-
-std::vector<cv::Point> calcu_lattice_point(cv::Mat& image) {
-    uint16_t w = image.size().width;
-    uint16_t h = image.size().height;
-
-    std::vector<cv::Point> lattice_points;
-
-    cv::Mat3b img_temp = image;
-
-    for (int i = 0; i < (lattice_n - 1); i++) {
-        for (int j = 0; j < (lattice_m - 1); j++) {
-            cv::Point p;
-            p.x = static_cast<int>(static_cast<double>(w) / static_cast<double>(lattice_n) * (i + 1));
-            p.y = static_cast<int>(static_cast<double>(h) / static_cast<double>(lattice_m) * (j + 1));
-
-            if (static_cast<uint16_t>(img_temp(p)[0]) != 255) {
-                lattice_points.push_back(p);
-                ROS_INFO("x: %d, y: %d", lattice_points.back().x, lattice_points.back().y);
-            }
-        }
-    }
-
-    return lattice_points;
-}
-
-std::queue<GoalPoint2D> convert_coordinate(const std::vector<cv::Point> points) {
-    std::queue<GoalPoint2D> converted_points;
-
-    std::printf("%d, %d\n", points[3].x, points[3].y);
-
-    for (int i = 0; i < points.size(); i++) {
-        double x = static_cast<double>(points[i].x) * distance_per_cells;
-        double y = static_cast<double>(points[i].y) * distance_per_cells;
-        converted_points.push(GoalPoint2D(1.0, 1.0, 1.0));
-
-        converted_points.back().Show();
-    }
-
-    return converted_points;
-}
 
 void joystick_callback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
 
@@ -222,9 +149,8 @@ int main(int argc, char** argv) {
                 navigation_is_finished = false;
                 rstate = RobotStatus::kMoveToPoint;
 
-                target_points = calcu_lattice_point(mapimage);
-
-                goal_points = convert_coordinate(target_points);
+                MapProcessingLib::MapProcessing mp(mapimage, lattice_n, lattice_m);
+                goal_points = mp.GetGoalPoints();
             }
             break;
           }
