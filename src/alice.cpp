@@ -142,6 +142,7 @@ namespace AliceLib {
     }
 
     RobotStatus Alice::TransToRotate() {
+        /*
         RobotStatus next = RobotStatus::kRotateInPlace;
 
         if (searching_is_finished_) {
@@ -151,6 +152,8 @@ namespace AliceLib {
         }
 
         return next;
+        */
+       return RobotStatus::kMoveToPoint;
     }
 
     void Alice::EndSearchTask() {

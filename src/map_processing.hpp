@@ -6,6 +6,7 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
 #include <opencv2/opencv.hpp>
 #include "goal_point_2D.hpp"
 
@@ -21,6 +22,12 @@ namespace MapProcessingLib {
 
      private:
         static constexpr double kDistancePerCells = 0.05;
+
+        double map_width_;
+        double map_height_;
+
+        double robot_ox_;
+        double robot_oy_;
 
         std::queue<GoalPoint2DLib::GoalPoint2D> goal_points_;
 

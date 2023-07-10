@@ -202,7 +202,7 @@
     <node name="convert_twistmsg"   pkg="convert_twistmsg" type="convert_twistmsg" output="screen"/>
 
     <!-- map_server(pre-maked map publish) -->
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find aris_maincore)/map/map_target.yaml" >
+    <node name="map_server" pkg="map_server" type="map_server" args="/home/tenshi/catkin_ws/src/AliceNode/map/map_target.yaml" >
         <remap from="map" to="premaked_map"/>
     </node>
 
