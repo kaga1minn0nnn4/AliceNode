@@ -1,3 +1,8 @@
+/**
+ * @file map_processing.hpp
+ * @brief mapdata -> latticepoint
+ */
+
 #pragma once
 
 #include <vector>

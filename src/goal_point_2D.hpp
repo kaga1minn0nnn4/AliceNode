@@ -1,3 +1,8 @@
+/**
+ * @file goal_point_2D.hpp
+ * @brief publish to move_base
+ */
+
 #pragma once
 
 #include <ros/ros.h>
