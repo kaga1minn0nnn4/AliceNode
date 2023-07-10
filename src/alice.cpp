@@ -153,7 +153,8 @@ namespace AliceLib {
 
         return next;
         */
-       return RobotStatus::kMoveToPoint;
+        goal_pub_initial_ = true;
+        return RobotStatus::kMoveToPoint;
     }
 
     void Alice::EndSearchTask() {

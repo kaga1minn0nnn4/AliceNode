@@ -55,7 +55,7 @@ namespace MapProcessingLib {
         for (auto p : points_shuffle) {
             double x = static_cast<double>(p.x) * kDistancePerCells;
             double y = static_cast<double>(p.y) * kDistancePerCells;
-            converted_points.push(GoalPoint2DLib::GoalPoint2D(map_width_ - robot_ox_ - x, y - robot_oy_, 0.0));
+            converted_points.push(GoalPoint2DLib::GoalPoint2D(map_width_ - robot_ox_ - x, y - robot_oy_, 1.0));
 
             converted_points.back().Show();
         }
