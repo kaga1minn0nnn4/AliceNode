@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "mainnode");
     ros::NodeHandle nh("~");
 
-    AliceLib::Alice alice{nh, 0.01};
+    AliceLib::Alice alice{nh, 0.1};
 
     ros::AsyncSpinner spinner(4);
     spinner.start();

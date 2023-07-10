@@ -1,66 +1,14 @@
 #include "alice.hpp"
 
 namespace AliceLib {
+
     void Alice::Run(const ros::TimerEvent& e) {
         std::lock_guard<std::mutex> lock(mtx_);
-
-        switch (rstate) {
-          case RobotStatus::kStart: {
-            ROS_INFO("kStart");
-            if (mapdata_is_read_) {
-                searching_is_finished_ = false;
-                navigation_is_finished_ = false;
-                rstate = RobotStatus::kMoveToPoint;
-
-                MapProcessingLib::MapProcessing mp(mapimage_, kLatticeN, kLatticeM);
-                goal_points_ = mp.GetGoalPoints();
-            }
-            break;
-          }
-          case RobotStatus::kMoveToPoint: {
-            ROS_INFO("kMoveToPoint");
-            if (searching_is_finished_){
-                rstate = RobotStatus::kEndSearch;
-                break;
-            }
-            if (navigation_is_finished_) {
-                goal_points_.pop();
-                rstate = RobotStatus::kRotateInPlace;
-            } else {
-                if (!goal_points_.empty()) {
-                    geometry_msgs::PoseStamped p = goal_points_.front();
-                    goal_pub_.publish(p);
-                    rstate = RobotStatus::kEndSearch;
-                } else {
-                    rstate = RobotStatus::kEndSearch;
-                }
-            }
-            break;
-          }
-          case RobotStatus::kRotateInPlace: {
-            ROS_INFO("kRotateInPlace");
-            if (searching_is_finished_){
-                rstate = RobotStatus::kEndSearch;
-                break;
-            }
-            if (navigation_is_finished_) {
-                rstate = RobotStatus::kMoveToPoint;
-            } else {
-                // goal_pub.Publish(...)
-            }
-            break;
-          }
-          case RobotStatus::kEndSearch: {
-            ROS_INFO("kEndSearch");
-            break;
-          }
-          default: {
-            break;
-          }
-        }
+        fsm_.Run();
     }
 
     void Alice::YOLOv7ResultCallback(const std_msgs::String::ConstPtr& result_msg) {
+        // read result_msg process ...
         {
             std::lock_guard<std::mutex> lock(mtx_);
             searching_is_finished_ = false;
@@ -90,8 +38,6 @@ namespace AliceLib {
                 break;
             }
         }
-
-        // std::printf("id: %d\n", status_id);
     }
 
     void Alice::ClipMapdata(const cv::Mat& mapimg, cv::Mat& cliped_mapimg) {
@@ -145,6 +91,74 @@ namespace AliceLib {
             mapdata_is_read_ = true;
         }
 
+    }
+
+    void Alice::StartStateTask() {
+        ROS_INFO("kStart");
+    }
+
+    RobotStatus Alice::TransToStart() {
+        RobotStatus next = RobotStatus::kStart;
+        if (mapdata_is_read_) {
+            next = RobotStatus::kMoveToPoint;
+
+            searching_is_finished_ = false;
+            navigation_is_finished_ = false;
+
+            MapProcessingLib::MapProcessing mp(mapimage_, kLatticeN, kLatticeM);
+            goal_points_ = mp.GetGoalPoints();
+        }
+        return next;
+    }
+
+    void Alice::MoveToPointStateTask() {
+        ROS_INFO("kMoveToPoint");
+        if (goal_pub_initial_) {
+            geometry_msgs::PoseStamped p = goal_points_.front();
+            goal_pub_.publish(p);
+            goal_pub_initial_ = false;
+        }
+    }
+
+    RobotStatus Alice::TransToMove() {
+        RobotStatus next = RobotStatus::kMoveToPoint;
+
+        if (searching_is_finished_ || goal_points_.empty()) {
+            next = RobotStatus::kEndSearch;
+        } else if (navigation_is_finished_) {
+            goal_points_.pop();
+            goal_pub_initial_ = true;
+            next = RobotStatus::kRotateInPlace;
+        }
+
+        return next;
+    }
+
+    void Alice::RotateInPlaceStateTask() {
+        ROS_INFO("kRotateInPlace");
+        if (goal_pub_initial_) {
+            goal_pub_initial_ = false;
+        }
+    }
+
+    RobotStatus Alice::TransToRotate() {
+        RobotStatus next = RobotStatus::kRotateInPlace;
+
+        if (searching_is_finished_) {
+            next = RobotStatus::kEndSearch;
+        } else if (navigation_is_finished_) {
+            next = RobotStatus::kMoveToPoint;
+        }
+
+        return next;
+    }
+
+    void Alice::EndSearchTask() {
+        ROS_INFO("kRotateInPlace");
+    }
+
+    RobotStatus Alice::TransToEnd() {
+        return RobotStatus::kEndSearch;
     }
 
 }

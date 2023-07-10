@@ -30,8 +30,10 @@ namespace AliceLib {
           nh_{nh},
           rstate{RobotStatus::kStart},
           searching_is_finished_{false},
-          navigation_is_finished_{false},
-          mapdata_is_read_{false} {
+          navigation_is_finished_{true},
+          mapdata_is_read_{false},
+          goal_pub_initial_{true},
+          fsm_(RobotStatus::kStart, RobotStatus::kEndSearch) {
 
             rover_pub_ = nh_.advertise<geometry_msgs::Twist>("/rover_twist", 10);
             goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
@@ -41,6 +43,18 @@ namespace AliceLib {
             mapdata_sub_ = nh_.subscribe("/premaked_map", 10, &Alice::MapdataCallback, this);
 
             mainloop_timer_ = nh_.createTimer(ros::Duration(t), &Alice::Run, this);
+
+            fsm_.RegisterStateFct(RobotStatus::kStart, std::bind(&Alice::StartStateTask, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kStart, std::bind(&Alice::TransToStart, this));
+
+            fsm_.RegisterStateFct(RobotStatus::kMoveToPoint, std::bind(&Alice::MoveToPointStateTask, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kMoveToPoint, std::bind(&Alice::TransToMove, this));
+
+            fsm_.RegisterStateFct(RobotStatus::kRotateInPlace, std::bind(&Alice::RotateInPlaceStateTask, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kRotateInPlace, std::bind(&Alice::TransToRotate, this));
+
+            fsm_.RegisterStateFct(RobotStatus::kEndSearch, std::bind(&Alice::EndSearchTask, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kEndSearch, std::bind(&Alice::TransToEnd, this));
         }
 
      private:
@@ -65,11 +79,15 @@ namespace AliceLib {
         bool navigation_is_finished_;
         bool mapdata_is_read_;
 
+        bool goal_pub_initial_;
+
         std::queue<GoalPoint2DLib::GoalPoint2D> goal_points_;
 
         cv::Mat mapimage_;
 
         std::mutex mtx_;
+
+        FangFSMLibrary::FangFSM<RobotStatus> fsm_;
 
         void YOLOv7ResultCallback(const std_msgs::String::ConstPtr& result_msg);
         void MovebaseStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& status);
@@ -79,5 +97,14 @@ namespace AliceLib {
 
         void Run(const ros::TimerEvent& e);
 
+        void StartStateTask();
+        void MoveToPointStateTask();
+        void RotateInPlaceStateTask();
+        void EndSearchTask();
+
+        RobotStatus TransToStart();
+        RobotStatus TransToMove();
+        RobotStatus TransToRotate();
+        RobotStatus TransToEnd();
     };
 }
