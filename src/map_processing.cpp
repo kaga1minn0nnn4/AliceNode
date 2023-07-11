@@ -11,7 +11,7 @@ namespace MapProcessingLib {
         uint16_t w_ = image.size().width;
         uint16_t h_ = image.size().height;
 
-        cv::Rect roi(cv::Point(0, h_/2), cv::Size(w_, h_/2));
+        cv::Rect roi(cv::Point(0, h_*3/4), cv::Size(w_, h_/4));
         cv::Mat img_clip = image(roi);
 
         uint16_t w = img_clip.size().width;
