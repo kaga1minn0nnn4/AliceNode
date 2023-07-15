@@ -10,14 +10,14 @@
 
 namespace GoalPoint2DLib{
     class GoalPoint2D {
-    public:
+     public:
         GoalPoint2D(double x, double y, double angle);
 
         operator geometry_msgs::PoseStamped();
 
         void Show() const;
 
-    private:
+     private:
         geometry_msgs::PoseStamped goal_point_;
 
     };
