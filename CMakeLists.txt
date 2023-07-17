@@ -145,6 +145,7 @@ add_executable(
     src/goal_point_2D.cpp
     src/map_processing.cpp
     src/alice.cpp
+    src/tour_points.cpp
 )
 
 ## Rename C++ executable without prefix

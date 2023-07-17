@@ -20,12 +20,13 @@
 #include "goal_point_2D.hpp"
 #include "map_processing.hpp"
 #include "FangFSM/fsm.hpp"
+#include "tour_points.hpp"
 
 enum class RobotStatus {
     kStart,
     kMoveToPoint,
-    kRotateInPlace,
-    kEndSearch
+    kWaitMoveBase,
+    kEndOfSearch
 };
 
 namespace AliceLib {
@@ -37,8 +38,7 @@ namespace AliceLib {
           searching_is_finished_{false},
           navigation_is_finished_{true},
           mapdata_is_read_{false},
-          goal_pub_initial_{true},
-          fsm_(RobotStatus::kStart, RobotStatus::kEndSearch) {
+          fsm_(RobotStatus::kStart, RobotStatus::kEndOfSearch) {
 
             rover_pub_ = nh_.advertise<geometry_msgs::Twist>("/rover_twist", 10);
             goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
@@ -55,11 +55,11 @@ namespace AliceLib {
             fsm_.RegisterStateFct(RobotStatus::kMoveToPoint, std::bind(&Alice::MoveToPointStateTask, this));
             fsm_.RegisterTransitionFct(RobotStatus::kMoveToPoint, std::bind(&Alice::TransToMove, this));
 
-            fsm_.RegisterStateFct(RobotStatus::kRotateInPlace, std::bind(&Alice::RotateInPlaceStateTask, this));
-            fsm_.RegisterTransitionFct(RobotStatus::kRotateInPlace, std::bind(&Alice::TransToRotate, this));
+            fsm_.RegisterStateFct(RobotStatus::kWaitMoveBase, std::bind(&Alice::WaitMovebaseTask, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kWaitMoveBase, std::bind(&Alice::TransToWait, this));
 
-            fsm_.RegisterStateFct(RobotStatus::kEndSearch, std::bind(&Alice::EndSearchTask, this));
-            fsm_.RegisterTransitionFct(RobotStatus::kEndSearch, std::bind(&Alice::TransToEnd, this));
+            fsm_.RegisterStateFct(RobotStatus::kEndOfSearch, std::bind(&Alice::EndOfSearchTask, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kEndOfSearch, std::bind(&Alice::TransToEnd, this));
         }
 
      private:
@@ -84,9 +84,7 @@ namespace AliceLib {
         bool navigation_is_finished_;
         bool mapdata_is_read_;
 
-        bool goal_pub_initial_;
-
-        std::queue<GoalPoint2DLib::GoalPoint2D> goal_points_;
+        TourPointsLib::TourPoints tp_;
 
         cv::Mat mapimage_;
 
@@ -104,12 +102,12 @@ namespace AliceLib {
 
         void StartStateTask();
         void MoveToPointStateTask();
-        void RotateInPlaceStateTask();
-        void EndSearchTask();
+        void WaitMovebaseTask();
+        void EndOfSearchTask();
 
         RobotStatus TransToStart();
         RobotStatus TransToMove();
-        RobotStatus TransToRotate();
+        RobotStatus TransToWait();
         RobotStatus TransToEnd();
     };
 }

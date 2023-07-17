@@ -17,7 +17,7 @@ namespace TourPointsLib {
         TourPoints() : rd_{std::random_device{}()} {}
 
         void Register(GoalPoint2DLib::GoalPoint2D point);
-        const GoalPoint2DLib::GoalPoint2D& RandomAccess() const;
+        GoalPoint2DLib::GoalPoint2D& RandomAccess();
 
      private:
         std::vector<GoalPoint2DLib::GoalPoint2D> points_;

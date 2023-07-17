@@ -106,63 +106,51 @@ namespace AliceLib {
             navigation_is_finished_ = false;
 
             MapProcessingLib::MapProcessing mp(mapimage_, kLatticeN, kLatticeM);
-            goal_points_ = mp.GetGoalPoints();
+            mp.GetGoalPoints(tp_);
         }
         return next;
     }
 
     void Alice::MoveToPointStateTask() {
         ROS_INFO("kMoveToPoint");
-        if (goal_pub_initial_) {
-            geometry_msgs::PoseStamped p = goal_points_.front();
-            goal_pub_.publish(p);
-            goal_pub_initial_ = false;
-        }
+        geometry_msgs::PoseStamped p = tp_.RandomAccess();
+        goal_pub_.publish(p);
     }
 
     RobotStatus Alice::TransToMove() {
         RobotStatus next = RobotStatus::kMoveToPoint;
 
-        if (searching_is_finished_ || goal_points_.empty()) {
-            next = RobotStatus::kEndSearch;
-        } else if (navigation_is_finished_) {
-            goal_points_.pop();
-            goal_pub_initial_ = true;
-            next = RobotStatus::kRotateInPlace;
+        if (searching_is_finished_) {
+            next = RobotStatus::kEndOfSearch;
+        } else if (!navigation_is_finished_) {
+            next = RobotStatus::kWaitMoveBase;
         }
 
         return next;
     }
 
-    void Alice::RotateInPlaceStateTask() {
-        ROS_INFO("kRotateInPlace");
-        if (goal_pub_initial_) {
-            goal_pub_initial_ = false;
-        }
+    void Alice::WaitMovebaseTask() {
+        ROS_INFO("kWaitMovebase");
     }
 
-    RobotStatus Alice::TransToRotate() {
-        /*
-        RobotStatus next = RobotStatus::kRotateInPlace;
+    RobotStatus Alice::TransToWait() {
+        RobotStatus next = RobotStatus::kWaitMoveBase;
 
         if (searching_is_finished_) {
-            next = RobotStatus::kEndSearch;
+            next = RobotStatus::kEndOfSearch;
         } else if (navigation_is_finished_) {
             next = RobotStatus::kMoveToPoint;
         }
 
         return next;
-        */
-        goal_pub_initial_ = true;
-        return RobotStatus::kMoveToPoint;
     }
 
-    void Alice::EndSearchTask() {
-        ROS_INFO("kRotateInPlace");
+    void Alice::EndOfSearchTask() {
+        ROS_INFO("kEndOfSearch");
     }
 
     RobotStatus Alice::TransToEnd() {
-        return RobotStatus::kEndSearch;
+        return RobotStatus::kEndOfSearch;
     }
 
 }
