@@ -37,7 +37,7 @@
     </node>
 
     <!-- Start RViz with custom view -->
-    <!--node pkg="rviz" type="rviz" name="show_rviz" args="-d $(find cartgrapher_navigation)/rviz/navigation.rviz"/-->
+    <node pkg="rviz" type="rviz" name="show_rviz" args="-d $(find cartgrapher_navigation)/rviz/navigation.rviz"/>
 
     <!-- realsense -->
     <arg name="serial_no"           default=""/>
@@ -190,20 +190,25 @@
     </group>
 
     <!-- rosserial -->
-    <!--node pkg="rosserial_python" type="serial_node.py" name="serial_node">
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node">
         <param name="port" value="/dev/ttyUSB1" />
         <param name="baud" value="115200" />
-    </node-->
+    </node>
 
     <!-- wait for move_base starting -->
     <arg name="mainnode_start_delay" default="5.0"/>
 
     <!-- convert_twistmsg -->
-    <node name="convert_twistmsg"   pkg="convert_twistmsg" type="convert_twistmsg" output="screen"/>
+    <node name="convert_twistmsg"   pkg="convert_twistmsg" type="convert_twistmsg"/>
 
     <!-- map_server(pre-maked map publish) -->
     <node name="map_server" pkg="map_server" type="map_server" args="/home/tenshi/catkin_ws/src/AliceNode/map/map_target.yaml" >
         <remap from="map" to="premaked_map"/>
+    </node>
+
+    <!-- detect object -->
+    <node pkg="detect_object" name="detect_object" type="detect_object.py">
+        <remap from="object_detection_result" to="result"/>
     </node>
 
     <!-- maincore -->

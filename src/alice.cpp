@@ -11,7 +11,11 @@ namespace AliceLib {
         // read result_msg process ...
         {
             std::lock_guard<std::mutex> lock(mtx_);
-            searching_is_finished_ = false;
+            ROS_INFO(result_msg->data.c_str());
+            if (result_msg->data.c_str() == std::string("detect")) {
+                searching_is_finished_ = true;
+                ROS_INFO("Detect !");
+            }
         }
     }
 
@@ -22,6 +26,9 @@ namespace AliceLib {
             status_id = goal_status.status;
         }
 
+        status_id_ = status_id;
+        std::printf("sid : %d\n", status_id);
+
         {
             std::lock_guard<std::mutex> lock(mtx_);
             switch (status_id) {
@@ -29,7 +36,10 @@ namespace AliceLib {
                 navigation_is_finished_ = false;
                 break;
             }
-            // case 0:
+             case 2: {
+                navigation_is_finished_ = false;
+                break;
+             }
             case 3: {
                 navigation_is_finished_ = true;
                 break;
@@ -113,16 +123,20 @@ namespace AliceLib {
 
     void Alice::MoveToPointStateTask() {
         ROS_INFO("kMoveToPoint");
-        geometry_msgs::PoseStamped p = tp_.RandomAccess();
-        goal_pub_.publish(p);
+        if (pub_initial_) {
+            geometry_msgs::PoseStamped p = tp_.RandomAccess();
+            goal_pub_.publish(p);
+            pub_initial_ = false;
+
+        }
     }
 
     RobotStatus Alice::TransToMove() {
-        RobotStatus next = RobotStatus::kMoveToPoint;
+        RobotStatus next = RobotStatus::kWaitMoveBase;
 
         if (searching_is_finished_) {
             next = RobotStatus::kEndOfSearch;
-        } else if (!navigation_is_finished_) {
+        } else if (status_id_ == 1) {
             next = RobotStatus::kWaitMoveBase;
         }
 
@@ -138,8 +152,10 @@ namespace AliceLib {
 
         if (searching_is_finished_) {
             next = RobotStatus::kEndOfSearch;
-        } else if (navigation_is_finished_) {
+        } else if (status_id_ == 3) {
             next = RobotStatus::kMoveToPoint;
+            pub_initial_ = true;
+            navigation_is_finished_ = false;
         }
 
         return next;

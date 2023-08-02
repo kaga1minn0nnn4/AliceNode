@@ -25,7 +25,7 @@ namespace MapProcessingLib {
         }
 
      private:
-        static constexpr double kDistancePerCells = 0.05;
+        static constexpr double kDistancePerCells = 0.03;
 
         double map_width_;
         double map_height_;

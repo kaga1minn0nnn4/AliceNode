@@ -16,7 +16,7 @@ AliceNode is main node for object search robot.
     roslaunch alicenode main.launch
 
 ## Dependencies
-- rplidar_ros
+- rplidar_ros[]
 - cartographer
 - realsense-ros
 - [convert-twistmsg](https://github.com/kaga1minn0nnn4/convert_twistmsg.git)

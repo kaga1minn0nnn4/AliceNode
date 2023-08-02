@@ -38,6 +38,7 @@ namespace AliceLib {
           searching_is_finished_{false},
           navigation_is_finished_{true},
           mapdata_is_read_{false},
+          pub_initial_{true},
           fsm_(RobotStatus::kStart, RobotStatus::kEndOfSearch) {
 
             rover_pub_ = nh_.advertise<geometry_msgs::Twist>("/rover_twist", 10);
@@ -83,6 +84,10 @@ namespace AliceLib {
         bool searching_is_finished_;
         bool navigation_is_finished_;
         bool mapdata_is_read_;
+
+        bool pub_initial_;
+
+        uint8_t status_id_ = 0;
 
         TourPointsLib::TourPoints tp_;
 
