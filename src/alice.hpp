@@ -51,16 +51,16 @@ namespace AliceLib {
             mainloop_timer_ = nh_.createTimer(ros::Duration(t), &Alice::Run, this);
 
             fsm_.RegisterStateFct(RobotStatus::kStart, std::bind(&Alice::StartStateTask, this));
-            fsm_.RegisterTransitionFct(RobotStatus::kStart, std::bind(&Alice::TransToStart, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kStart, std::bind(&Alice::TransFromStart, this));
 
             fsm_.RegisterStateFct(RobotStatus::kMoveToPoint, std::bind(&Alice::MoveToPointStateTask, this));
-            fsm_.RegisterTransitionFct(RobotStatus::kMoveToPoint, std::bind(&Alice::TransToMove, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kMoveToPoint, std::bind(&Alice::TransFromMove, this));
 
             fsm_.RegisterStateFct(RobotStatus::kWaitMoveBase, std::bind(&Alice::WaitMovebaseTask, this));
-            fsm_.RegisterTransitionFct(RobotStatus::kWaitMoveBase, std::bind(&Alice::TransToWait, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kWaitMoveBase, std::bind(&Alice::TransFromWait, this));
 
             fsm_.RegisterStateFct(RobotStatus::kEndOfSearch, std::bind(&Alice::EndOfSearchTask, this));
-            fsm_.RegisterTransitionFct(RobotStatus::kEndOfSearch, std::bind(&Alice::TransToEnd, this));
+            fsm_.RegisterTransitionFct(RobotStatus::kEndOfSearch, std::bind(&Alice::TransFromEnd, this));
         }
 
      private:
@@ -110,9 +110,9 @@ namespace AliceLib {
         void WaitMovebaseTask();
         void EndOfSearchTask();
 
-        RobotStatus TransToStart();
-        RobotStatus TransToMove();
-        RobotStatus TransToWait();
-        RobotStatus TransToEnd();
+        RobotStatus TransFromStart();
+        RobotStatus TransFromMove();
+        RobotStatus TransFromWait();
+        RobotStatus TransFromEnd();
     };
 }

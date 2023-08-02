@@ -107,7 +107,7 @@ namespace AliceLib {
         ROS_INFO("kStart");
     }
 
-    RobotStatus Alice::TransToStart() {
+    RobotStatus Alice::TransFromStart() {
         RobotStatus next = RobotStatus::kStart;
         if (mapdata_is_read_) {
             next = RobotStatus::kMoveToPoint;
@@ -131,7 +131,7 @@ namespace AliceLib {
         }
     }
 
-    RobotStatus Alice::TransToMove() {
+    RobotStatus Alice::TransFromMove() {
         RobotStatus next = RobotStatus::kWaitMoveBase;
 
         if (searching_is_finished_) {
@@ -147,7 +147,7 @@ namespace AliceLib {
         ROS_INFO("kWaitMovebase");
     }
 
-    RobotStatus Alice::TransToWait() {
+    RobotStatus Alice::TransFromWait() {
         RobotStatus next = RobotStatus::kWaitMoveBase;
 
         if (searching_is_finished_) {
@@ -165,7 +165,7 @@ namespace AliceLib {
         ROS_INFO("kEndOfSearch");
     }
 
-    RobotStatus Alice::TransToEnd() {
+    RobotStatus Alice::TransFromEnd() {
         return RobotStatus::kEndOfSearch;
     }
 
