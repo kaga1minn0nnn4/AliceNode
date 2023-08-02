@@ -20,7 +20,6 @@
 #include <mutex>
 
 #include "goal_point_2D.hpp"
-#include "map_processing.hpp"
 #include "FangFSM/fsm.hpp"
 #include "tour_points.hpp"
 
@@ -39,7 +38,6 @@ namespace AliceLib {
           rstate{RobotStatus::kStart},
           searching_is_finished_{false},
           navigation_is_finished_{true},
-          mapdata_is_read_{false},
           pub_initial_{true},
           fsm_(RobotStatus::kStart, RobotStatus::kEndOfSearch) {
 
@@ -47,7 +45,6 @@ namespace AliceLib {
 
             yolo_result_sub_ = nh_.subscribe("/result", 10, &Alice::YOLOv7ResultCallback, this);
             movebase_status_sub_ = nh_.subscribe("/move_base/status", 10, &Alice::MovebaseStatusCallback, this);
-            mapdata_sub_ = nh_.subscribe("/premaked_map", 10, &Alice::MapdataCallback, this);
 
             mainloop_timer_ = nh_.createTimer(ros::Duration(t), &Alice::Run, this);
 
@@ -65,9 +62,6 @@ namespace AliceLib {
         }
 
      private:
-        static constexpr uint16_t kLatticeN = 4;
-        static constexpr uint16_t kLatticeM = 3;
-
         ros::NodeHandle& nh_;
 
         RobotStatus rstate;
@@ -78,13 +72,11 @@ namespace AliceLib {
         ros::Subscriber joystick_sub_;
         ros::Subscriber yolo_result_sub_;
         ros::Subscriber movebase_status_sub_;
-        ros::Subscriber mapdata_sub_;
 
         ros::Timer mainloop_timer_;
 
         bool searching_is_finished_;
         bool navigation_is_finished_;
-        bool mapdata_is_read_;
 
         bool pub_initial_;
 
@@ -92,17 +84,12 @@ namespace AliceLib {
 
         TourPointsLib::TourPoints tp_;
 
-        cv::Mat mapimage_;
-
         std::mutex mtx_;
 
         FangFSMLibrary::FangFSM<RobotStatus> fsm_;
 
         void YOLOv7ResultCallback(const std_msgs::String::ConstPtr& result_msg);
         void MovebaseStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& status);
-        void MapdataCallback(const nav_msgs::OccupancyGrid::ConstPtr& mapdata);
-
-        void ClipMapdata(const cv::Mat& mapimg, cv::Mat& cliped_mapimg);
 
         void Run(const ros::TimerEvent& e);
 

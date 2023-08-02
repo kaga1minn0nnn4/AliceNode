@@ -19,6 +19,8 @@ namespace TourPointsLib {
         void Register(GoalPoint2DLib::GoalPoint2D point);
         GoalPoint2DLib::GoalPoint2D& RandomAccess();
 
+        void Show() const;
+
      private:
         std::vector<GoalPoint2DLib::GoalPoint2D> points_;
 

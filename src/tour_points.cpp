@@ -13,10 +13,14 @@ namespace TourPointsLib {
             index = dist(rd_);
         }
 
-        //std::printf("size %d, index %d\n", points_.size(), index);
-
         last_access_index_ = index;
         return points_[index];
+    }
+
+    void TourPoints::Show() const {
+        for(auto x: points_) {
+            x.Show();
+        }
     }
 
 }

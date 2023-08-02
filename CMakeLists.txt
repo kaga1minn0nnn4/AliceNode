@@ -145,7 +145,6 @@ add_executable(
     ${PROJECT_NAME}
     src/main.cpp
     src/goal_point_2D.cpp
-    src/map_processing.cpp
     src/alice.cpp
     src/tour_points.cpp
 )
