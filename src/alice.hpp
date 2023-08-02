@@ -10,6 +10,8 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <actionlib_msgs/GoalStatusArray.h>
+#include <actionlib/client/simple_action_client.h>
+#include <move_base_msgs/MoveBaseAction.h>
 #include <nav_msgs/OccupancyGrid.h>
 
 #include <iostream>
@@ -41,7 +43,6 @@ namespace AliceLib {
           pub_initial_{true},
           fsm_(RobotStatus::kStart, RobotStatus::kEndOfSearch) {
 
-            rover_pub_ = nh_.advertise<geometry_msgs::Twist>("/rover_twist", 10);
             goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
 
             yolo_result_sub_ = nh_.subscribe("/result", 10, &Alice::YOLOv7ResultCallback, this);

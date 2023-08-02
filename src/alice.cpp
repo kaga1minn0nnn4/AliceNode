@@ -166,6 +166,10 @@ namespace AliceLib {
     }
 
     RobotStatus Alice::TransFromEnd() {
+        actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> client("move_base");
+        client.waitForServer();
+        client.cancelAllGoals();
+
         return RobotStatus::kEndOfSearch;
     }
 
