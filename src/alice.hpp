@@ -37,7 +37,6 @@ namespace AliceLib {
           nh_{nh},
           rstate{RobotStatus::kStart},
           searching_is_finished_{false},
-          navigation_is_finished_{true},
           pub_initial_{true},
           fsm_(RobotStatus::kStart, RobotStatus::kEndOfSearch) {
 
@@ -76,11 +75,10 @@ namespace AliceLib {
         ros::Timer mainloop_timer_;
 
         bool searching_is_finished_;
-        bool navigation_is_finished_;
 
         bool pub_initial_;
 
-        uint8_t status_id_ = 0;
+        uint8_t status_id_ = 1;
 
         TourPointsLib::TourPoints tp_;
 
